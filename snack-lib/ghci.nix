@@ -28,9 +28,14 @@ rec {
           modSpecs;
 
       dirs = allTransitiveDirectories modSpecs;
+      workDirs = lib.lists.unique (map (mod: builtins.toString mod.moduleBase) modSpecs);
+      iworkdirs = lib.strings.concatMapStrings (d: " -i" + d) workDirs;
+
     in
       # This symlinks the extra dirs to $PWD for GHCi to work
-      writeScriptBin "ghci-with-files"
+#      lib.debug.traceSeq (map (mod: builtins.toString mod.moduleBase) modSpecs) (writeScriptBin "ghci-with-files"
+#       lib.debug.traceSeq iworkdirs (writeScriptBin "ghci-with-files"
+       (writeScriptBin "ghci-with-files"
         ''
         #!/usr/bin/env bash
         set -euo pipefail
@@ -48,6 +53,6 @@ rec {
           done
           fi
         done
-        ${ghc}/bin/ghci ${lib.strings.escapeShellArgs ghciArgs}
-        '';
+        ${ghc}/bin/ghci ${iworkdirs} ${lib.strings.escapeShellArgs ghciArgs}
+        '');
 }
